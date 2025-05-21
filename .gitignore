@@ -1,0 +1,5 @@
+.*
+local.*
+/ios/
+/android/
+pubspec.lock

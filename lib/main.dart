@@ -7,10 +7,11 @@ import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart' as sql;
 
 Future<void> createInsertAndQuery() async {
-  final isolateId = Service.getIsolateID(Isolate.current);
+  final isolateId = Service.getIsolateId(Isolate.current);
 
   print('running on $isolateId');
 
+  // ignore: deprecated_member_use
   sql.Sqflite.setDebugModeOn(true);
   final database = await sql.openDatabase(
     sql.inMemoryDatabasePath,
@@ -18,17 +19,17 @@ Future<void> createInsertAndQuery() async {
     onCreate: (database, ver) async {
       print('opened version: $ver');
 
-      await database
-          .execute('CREATE TABLE test(id int primary key, blob text);');
+      await database.execute(
+        'CREATE TABLE test(id int primary key, blob text);',
+      );
     },
   );
 
   final currentTime = DateTime.now();
-  await database.insert(
-    'test',
-    {'id': 0, 'blob': '${currentTime.toIso8601String()}'},
-    conflictAlgorithm: sql.ConflictAlgorithm.replace,
-  );
+  await database.insert('test', {
+    'id': 0,
+    'blob': '${currentTime.toIso8601String()}',
+  }, conflictAlgorithm: sql.ConflictAlgorithm.replace);
 
   final message = await database.query('test');
   final blob = message.first['blob'];
@@ -46,7 +47,7 @@ void backgroundEntrypoint() {
 const _methodChannel = MethodChannel('com.example.sqflite/backgrounded');
 Future<void> backgroundedCreateAndInsertQuery() {
   final CallbackHandle handle =
-      PluginUtilities.getCallbackHandle(backgroundEntrypoint);
+      PluginUtilities.getCallbackHandle(backgroundEntrypoint)!;
 
   return _methodChannel.invokeMethod('', [handle.toRawHandle()]);
 }
@@ -79,7 +80,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -97,19 +98,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -128,19 +116,19 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            RaisedButton(
+            ElevatedButton(
               child: Text('Foreground Isolate'),
               onPressed: () async {
                 await createInsertAndQuery();
               },
             ),
             const SizedBox(height: 24.0),
-            RaisedButton(
+            ElevatedButton(
               child: Text('Background Isolate'),
               onPressed: () async {
                 await backgroundedCreateAndInsertQuery();
               },
-            )
+            ),
           ],
         ),
       ),
